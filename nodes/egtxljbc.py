@@ -18,30 +18,28 @@ from comfy.cli_args import args
 
 class EGTXBCLJBCNode:
     def __init__(self):
-        self.output_dir = folder_paths.get_output_directory()  
         self.type = "output"
         self.prefix_append = ""
         self.compress_level = 4
+
     @classmethod
     def INPUT_TYPES(s):
         return {"required": 
                     {"images": ("IMAGE", ),
                      "filename_prefix": ("STRING", {"default": "ComfyUI"}),
-                     "custom_output_dir": ("STRING", {"default": "", "optional": True})},  
+                     "save_path": ("STRING", {"default": "output"})},  
                 "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
                 }
     RETURN_TYPES = ()
     FUNCTION = "save_images"
     OUTPUT_NODE = True
     CATEGORY = "2🐕/🖼️Image"
-    def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None, custom_output_dir=""):
-        # Determine which output directory to use
-        output_dir = custom_output_dir if custom_output_dir else self.output_dir
-        
-        # Save images to the selected directory
-        results = self._save_images_to_dir(images, filename_prefix, prompt, extra_pnginfo, output_dir)
-        
+
+    def save_images(self, images, filename_prefix="ComfyUI", save_path="output", prompt=None, extra_pnginfo=None):
+        # Save images to the specified path
+        results = self._save_images_to_dir(images, filename_prefix, prompt, extra_pnginfo, save_path)
         return { "ui": { "images": results } }
+
     def _save_images_to_dir(self, images, filename_prefix, prompt, extra_pnginfo, output_dir):
         results = list()
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, output_dir, images[0].shape[1], images[0].shape[0])
@@ -61,7 +59,6 @@ class EGTXBCLJBCNode:
             file = f"{filename_with_batch_num}_{counter:05}_.png"
             img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
                 
-            
             display_path = os.path.join(output_dir, subfolder)
             results.append({
                 "filename": file,
